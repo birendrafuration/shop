@@ -13,15 +13,39 @@ class ProductList extends StatefulWidget {
 class _ProductListState extends State<ProductList> {
   final List<String> filters = const ['All', 'Addidas', 'Nike', 'Bata'];
   late String selectedFilter;
+  var productList = products;
   @override
   void initState() {
     super.initState();
     selectedFilter = filters[0];
+    productList = products;
+  }
+
+  void filterProducts(String searchText) {
+    setState(() {
+      if (searchText.isEmpty) {
+        productList = selectedFilter == "All"
+            ? products
+            : products
+                .where((element) =>
+                    element['company'].toString().toLowerCase() ==
+                    selectedFilter.toLowerCase())
+                .toList();
+      } else {
+        productList = products
+            .where((element) => element['company']
+                .toString()
+                .toLowerCase()
+                .contains(searchText.toLowerCase()))
+            .toList();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final TextEditingController textEditingController = TextEditingController();
     const border = OutlineInputBorder(
       borderSide: BorderSide(
         color: Color.fromRGBO(225, 225, 225, 1),
@@ -40,9 +64,14 @@ class _ProductListState extends State<ProductList> {
                 child: Text("Shoes\nCollections",
                     style: Theme.of(context).textTheme.titleLarge),
               ),
-              const Expanded(
+              Expanded(
                 child: TextField(
-                  decoration: InputDecoration(
+                  controller: textEditingController,
+                  onSubmitted: (value) {
+                    filterProducts(value);
+                    // print(value);
+                  },
+                  decoration: const InputDecoration(
                       hintText: 'Search',
                       prefixIcon: Icon(
                         Icons.search,
@@ -68,6 +97,15 @@ class _ProductListState extends State<ProductList> {
                     onTap: () {
                       setState(() {
                         selectedFilter = filter;
+                        productList = selectedFilter == "All"
+                            ? products
+                            : products
+                                .where((element) =>
+                                    element['company']
+                                        .toString()
+                                        .toLowerCase() ==
+                                    selectedFilter.toLowerCase())
+                                .toList();
                       });
                     },
                     child: Chip(
@@ -92,14 +130,14 @@ class _ProductListState extends State<ProductList> {
           Expanded(
             child: size.width > 650
                 ? GridView.builder(
-                    itemCount: products.length,
+                    itemCount: productList.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 1,
                     ),
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final product = productList[index];
                       return GestureDetector(
                         onTap: () {
                           Navigator.of(context)
@@ -118,9 +156,9 @@ class _ProductListState extends State<ProductList> {
                       );
                     })
                 : ListView.builder(
-                    itemCount: products.length,
+                    itemCount: productList.length,
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final product = productList[index];
                       return GestureDetector(
                         onTap: () {
                           Navigator.of(context)
